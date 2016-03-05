@@ -43,6 +43,9 @@ int main(int argc, char *argv[])
     e = pHead;
     e->pNext = NULL;
 
+    entry *hash_table[1000] = {NULL},*hash_head[1000]= {NULL};
+
+
 #if defined(__GNUC__)
     __builtin___clear_cache((char *) pHead, (char *) pHead + sizeof(entry));
 #endif
@@ -52,7 +55,24 @@ int main(int argc, char *argv[])
             i++;
         line[i - 1] = '\0';
         i = 0;
+#if defined(OPT)
+        unsigned int key;
+        key = hash(line);
+        key = key % 1000;
+
+        if(hash_head[key] == NULL) {
+            hash_head[key] = (entry*)malloc(sizeof(entry));
+
+            hash_table[key] = hash_head[key];
+
+
+        }
+        hash_table[key] = append(line,hash_table[key]);
+
+#else
+
         e = append(line, e);
+#endif
     }
     clock_gettime(CLOCK_REALTIME, &end);
     cpu_time1 = diff_in_second(start, end);
@@ -64,11 +84,27 @@ int main(int argc, char *argv[])
 
     /* the givn last name to find */
     char input[MAX_LAST_NAME_SIZE] = "zyxel";
-    e = pHead;
 
+#if defined(OPT)
+
+    unsigned int k = hash(input) % 1000;
+    e = hash_head[k];
+
+
+
+
+#else
+    e = pHead;
+#endif
     assert(findName(input, e) &&
            "Did you implement findName() in " IMPL "?");
     assert(0 == strcmp(findName(input, e)->lastName, "zyxel"));
+
+
+#if defined(OPT)
+
+    __builtin___clear_cache((char *) hash_head, (char *) hash_head + 1000 * sizeof(entry));
+#endif
 
 #if defined(__GNUC__)
     __builtin___clear_cache((char *) pHead, (char *) pHead + sizeof(entry));
